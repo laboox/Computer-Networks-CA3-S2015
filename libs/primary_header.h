@@ -17,7 +17,7 @@
 #include <bitset>
 #include <cctype>
 #include <cstdint>
-#include <cstdio>
+#include <cstdlib>
 #include <dirent.h>
 
 #define sh(x) cerr<<#x<<" = "<<x<<endl;
