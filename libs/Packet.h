@@ -33,7 +33,7 @@ enum PacketType{
     DISCONNECT,
     SETUPSERVICE,
     ERROR,
-    GET_SERVICES_LIST,
+    GET_GROUPS_LIST,
     REQ_READ,
     REQ_WRITE,
     SEND_FILE,

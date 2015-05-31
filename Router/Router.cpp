@@ -19,6 +19,8 @@ void Router::run()
     FD_ZERO(&read_fds);
     FD_SET(0, &router_fds);
     FD_SET(router_fd, &router_fds);
+    int i=0;
+    int needfd[2];
     
     int max_fd = router_fd;
 	while(true){
@@ -37,38 +39,14 @@ void Router::run()
 	                    string msg; cin>>msg;
 	                    int test_sock;
 	                    connect("localhost", port, &test_sock);
+                        cout<<"connect: "<<test_sock<<endl;
         				send_message(msg, test_sock);
-        				/*char buffer[MAX_MSG_SIZE];
-    					bzero(&buffer,MAX_MSG_SIZE);
-	                    read(test_sock, buffer, MAX_MSG_SIZE);
-        				*/
-	                    // string cmd;
-	                    // cin>>cmd;
-	                    // parseCmd(cmd);
 	                }
 	                else if(client_fd!=router_fd)
 	                {
-	                    char packet[MAX_BUFFER_SIZE];
-	                    read(client_fd, packet, MAX_BUFFER_SIZE);
-	                    cout<<packet<<endl;
-	                    //send_message(packet, client_fd);
-	                    //send_message(result, client_fd);
-	                    //FD_CLR(client_fd, &router_fds); DC
-	                    /*
-	                    if(!strcmp((char*)order,"DC"))
-	                    {
-	                        close(client_fd);
-	                        FD_CLR(client_fd, &router_fds);
-	                        cout<<"client disconnected!\n";
-	                    }
-
-	                    else 
-	                    {
-	                        string result=em.parseClientCmd((const char*)order, client_fd, caSockfd);
-	                        if(result!="")
-	                            send_message(result, client_fd);
-	                    }*/
-	                    
+                        Packet p;
+	                    p.recive(client_fd);
+                        p.send();
 	                }
 	                else
 	                {
@@ -81,9 +59,8 @@ void Router::run()
 	                    FD_SET(socket_accept_fd, &router_fds);
 	                    if(socket_accept_fd > max_fd)
 	                        max_fd = socket_accept_fd;
-	                    
-	                    //em.addBox(socket_accept_fd);
-	                    //cout<<"new election center connected.\n";
+                        needfd[i++] = socket_accept_fd;
+	                    cout<<"accept: "<<socket_accept_fd<<endl;
 	                }
      			}
      		}
