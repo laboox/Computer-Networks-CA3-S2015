@@ -25,6 +25,8 @@
 typedef bitset<ADDR_LEN> address;
 
 enum PacketType{
+    ACK,
+    JOIN_UPDATE,
     UPDATE,
     SET_ADDR,
     REQ_ADDR,
