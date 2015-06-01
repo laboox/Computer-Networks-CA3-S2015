@@ -17,7 +17,39 @@ void Server::run(){
         if(p.getType()==GET_GROUPS_LIST){
             sendGroupsList(p.getSource());
         }
+        else if(p.getType() == REQ_SERVER){
+            updateGroups(p.getSource(), p.getDataStr());
+        }
+        else if(p.getType() == REQ_JOIN){
+            joinReq(p.getSource(), p.getDataStr());
+        }
+        else if(p.getType() == REQ_LEAVE){
+            
+        }
     }
+}
+
+void Server::joinReq(address user, string group){
+    for(int i=0;i<groups.size();i++){
+        if(groups[i].first == group){
+            perToGroups[addrToString(user)].push_back(group);
+            Packet p;
+            p.setType(REQ_JOIN);
+            p.setDest(groups[i].second);
+            p.setSource(IP);
+            p.setData(addrToString(user));
+            p.send(routerFd);
+        }
+    }
+    sendError("group not exist.\n", user);
+}
+
+void Server::updateGroups(address source, string data){
+    string name, mulIp;
+    istringstream iss(data);
+    iss>>name>>mulIp;
+    groups.push_back(pair<string, address>(name, source));
+    cout<<"group "<<name<<" with ip "<<mulIp<<" added.\n";
 }
 
 void Server::sendGroupsList(address dest){

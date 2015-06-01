@@ -34,8 +34,8 @@ enum PacketType{
     SETUPSERVICE,
     ERROR,
     GET_GROUPS_LIST,
-    REQ_READ,
-    REQ_WRITE,
+    REQ_JOIN,
+    REQ_LEAVE,
     SEND_FILE,
     REQ_SERVER,
     ACCEPT_CONNECTION

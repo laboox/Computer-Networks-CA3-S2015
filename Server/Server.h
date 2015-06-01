@@ -13,7 +13,9 @@ public:
     Server(address IP, address serverIp, int routerPort);
     void run();
     void sendGroupsList(address dest);
+    void updateGroups(address source, string data);
+    void joinReq(address user, string group);
 private:
-    string name;
     vector<pair<string, address> > groups;
+    map<string, vector<string> > perToGroups;
 };

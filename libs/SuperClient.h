@@ -11,6 +11,7 @@
 class SuperClient{
 public:
     SuperClient(address IP, address serverIp, int routerPort);
+    void sendError(string data, address dest);
     address IP;
     address serverIP;
     int routerFd;

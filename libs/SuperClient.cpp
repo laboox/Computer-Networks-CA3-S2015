@@ -12,3 +12,12 @@ SuperClient::SuperClient(address IP, address serverIp, int routerPort){
     connect("localhost", routerPort, &routerFd);
     //TODO other connect procedurals
 }
+
+void SuperClient::sendError(string message, address dest){
+    Packet p;
+    p.setType(ERROR);
+    p.setSource(IP);
+    p.setDest(dest);
+    p.setData(message);
+    p.send(routerFd);
+}

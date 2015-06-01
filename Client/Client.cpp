@@ -90,7 +90,7 @@ void Client::parseCmd(string line){
     }
     else if(cmd0=="Join"){
         if(iss>>cmd1){
-            //joinGroup(cmd1);
+            joinGroup(cmd1);
         } else {
             throw Exeption("invalid cmd");
         }
@@ -109,5 +109,17 @@ void Client::selectGroup(string g){
     if(groups.count(g)<=0)
         throw Exeption("Group does not exist");
     selGroup = g;
+    cout<<"group "<< g << " with ip " << addrToString( groups[g] ) <<" selected!\n";
+}
+
+void Client::joinGroup(string g){
+    if(groups.count(g)<=0)
+        throw Exeption("Group does not exist");
+    Packet p;
+    p.setType(REQ_JOIN);
+    p.setSource(IP);
+    p.setDest(serverIP);
+    p.setData(g);
+    p.send(routerFd);
     cout<<"group "<< g << " with ip " << addrToString( groups[g] ) <<" selected!\n";
 }
