@@ -12,6 +12,6 @@
 #define MAX_BUFFER_SIZE 2048
 
 void build_server(int socketfd, struct sockaddr_in *server_address, int port_number);
-void connect(char* ip, int port, int* socketfd);
+void connect(char* ip, char* port, int* socketfd);
 void send_message(string message, int sockfd);
 

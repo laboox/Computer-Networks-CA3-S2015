@@ -33,10 +33,18 @@ void Router::run()
         		{
 	                if(client_fd==0)
 	                {
-	                    string cmd;
-	                    getline(cin, cmd);
-	                    cout<<cmd;
-	                    //parseCmd(cmd);
+	                    int port; cin>>port;
+	                    string msg; cin>>msg;
+	                    int test_sock;
+	                    connect("localhost", port, &test_sock);
+        				send_message(msg, test_sock);
+        				/*char buffer[MAX_MSG_SIZE];
+    					bzero(&buffer,MAX_MSG_SIZE);
+	                    read(test_sock, buffer, MAX_MSG_SIZE);
+        				*/
+	                    // string cmd;
+	                    // cin>>cmd;
+	                    // parseCmd(cmd);
 	                }
 	                else if(client_fd!=router_fd)
 	                {

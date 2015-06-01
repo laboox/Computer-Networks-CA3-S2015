@@ -1,7 +1,7 @@
 include ../Makefile
 
-all: Router
-Router: main.o
+all: Router.out
+Router.out: main.o
 	$(CC) *.o $(CLIBS) -o Router 
 main.o: main.cpp Router.o
 	$(CC) $(CFLAGS) -c main.cpp
