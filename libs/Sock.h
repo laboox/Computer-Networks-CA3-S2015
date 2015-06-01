@@ -1,5 +1,4 @@
-#ifndef SCOK
-#define SOCK
+#pragma once
 
 #include "primary_header.h"
 #include <sys/types.h>
@@ -16,4 +15,3 @@ void build_server(int socketfd, struct sockaddr_in *server_address, int port_num
 void connect(char* ip, char* port, int* socketfd);
 void send_message(string message, int sockfd);
 
-#endif

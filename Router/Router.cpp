@@ -1,13 +1,18 @@
-Router::Router(int port)
+#include "Router.h"
+
+Router::Router(int router_port)
 {
 	struct sockaddr_in router_address;
     router_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (router_fd < 0) 
-        throw Exception("Problem in openning socket!");
-    build_server(router_fd, &router_address, port); 
+        throw Exeption("Problem in openning socket!");
+    build_server(router_fd, &router_address, router_port); 
+
+    this->router_port = router_port;
+    cout<<"Router bind on port "<<router_port<<endl;
 }
 
-Router::run()
+void Router::run()
 {
     fd_set router_fds, read_fds;
     FD_ZERO(&router_fds);
@@ -35,8 +40,8 @@ Router::run()
 	                }
 	                else if(client_fd!=router_fd)
 	                {
-	                    unsigned char packet[MAX_MSG_SIZE];
-	                    read(client_fd, packet, MAX_MSG_SIZE);
+	                    char packet[MAX_BUFFER_SIZE];
+	                    read(client_fd, packet, MAX_BUFFER_SIZE);
 	                    send_message(packet, client_fd);
 	                    //send_message(result, client_fd);
 	                    //FD_CLR(client_fd, &router_fds); DC
