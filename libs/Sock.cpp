@@ -2,7 +2,6 @@
 
 void connect(char* ip, int port, int* socketfd)
 {
-	
 	int char_number;
 	struct sockaddr_in server_address;
 	struct hostent *server;

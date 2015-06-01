@@ -9,7 +9,6 @@ SuperClient::SuperClient(address IP, address serverIp, int routerPort){
     char portstr[128]={0};
     this->IP = IP;
     this->serverIP = serverIP;
-    itoa(routerPort, portstr, 10);
-    connect("localhost", portstr, &routerFd);
+    connect("localhost", routerPort, &routerFd);
     //TODO other connect procedurals
 }

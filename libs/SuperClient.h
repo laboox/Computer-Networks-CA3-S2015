@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "Sock.h"
 #include "Packet.h"
 
 class SuperClient{
