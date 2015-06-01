@@ -18,7 +18,7 @@
 #include "primary_header.h"
 
 
-#define ADDR_LEN 128
+#define ADDR_LEN 32
 #define DATA_LEN 23
 #define INIT_TTL 20
 

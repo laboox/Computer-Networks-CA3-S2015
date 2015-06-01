@@ -38,21 +38,21 @@ string Packet::getDataStr(){
 }
 
 void Packet::putCrc() {
-    char packchar[72] = {0};
+    char packchar[MSG_LEN] = {0};
     crc.reset();
     Crc32 crcgen;
 
     getMessageByPacket(packchar);
-    crcgen.AddData((unsigned char*)packchar, 66);
+    crcgen.AddData((unsigned char*)packchar, 42);
     crc = bitset<48>((crcgen.getCrc32()));
 }
 
 int Packet::checkCrc() {
-    char packchar[72] = {0};
+    char packchar[MSG_LEN] = {0};
     Crc32 crcgen;
 
     getMessageByPacket(packchar);
-    crcgen.AddData((unsigned char*)packchar, 66);
+    crcgen.AddData((unsigned char*)packchar, 42);
     bitset<48> crccheck(crcgen.getCrc32());
     return crccheck.to_ulong() == crc.to_ulong();
 }
@@ -70,16 +70,16 @@ bitset<336> Packet::getPacketBitsetKam() {
     ret |= (temp << 16);
 
     temp = bitset<336>(source.to_string());
-    ret |= (temp << 64);
+    ret |= (temp << 48);
     
     temp = bitset<336>(ttl.to_string());
-    ret |= (temp << 96);
+    ret |= (temp << 80);
     
     temp = bitset<336>(length.to_string());
-    ret |= (temp << 136);
+    ret |= (temp << 112);
     
     temp = bitset<336>(data.to_string());
-    ret |= (temp << 320);
+    ret |= (temp << 152);
     
     return ret;
 }
@@ -116,24 +116,25 @@ void Packet::getPacketByMessage ( char* pack ){
             type[(i-0)%16] = pack[i/8] & (1<<(i%8)) ;
         }
         else if( (2 <= i/8) && (i/8 < 6)){
-            dest[(i-16)%128] = pack[i/8] & (1<<(i%8)) ;
+            dest[(i-16)%32] = pack[i/8] & (1<<(i%8)) ;
         }
         else if( (6 <= i/8) && (i/8 < 10)){
-            source[(i-144)%128] = pack[i/8] & (1<<(i%8)) ;
+            source[(i-48)%32] = pack[i/8] & (1<<(i%8)) ;
         }
         else if( (10 <= i/8) && ( i/8 < 14) ){
-            ttl[(i-272)%32] = pack[i/8] & (1<<(i%8)) ;
+            ttl[(i-80)%32] = pack[i/8] & (1<<(i%8)) ;
         }
         else if( (14 <= i/8) && ( i/8 < 19) ){
-            length[(i-304)%40] = pack[i/8] & (1<<(i%8)) ;
+            length[(i-112)%40] = pack[i/8] & (1<<(i%8)) ;
         }
         else if( (19 <= i/8) && (i/8 < 42) ){
-            data[(i-344)%184] = pack[i/8] & (1<<(i%8)) ;
+            data[(i-152)%184] = pack[i/8] & (1<<(i%8)) ;
         }
         else if( (42 <= i/8) && ( i/8 < 48) ){
-            crc[(i-528)%48] = pack[i/8] & (1<<(i%8)) ;
+            crc[(i-336)%48] = pack[i/8] & (1<<(i%8)) ;
         }
     }
+    cerr<<"packet recived\n";
 }
 
 void Packet::decTtl(){
@@ -167,6 +168,7 @@ void Packet::recive(int sockfd)
 {
     char msg[MSG_LEN] = {0};
     int n=read(sockfd, msg, MSG_LEN);
+    sh(n);
     if(n<0)
         throw Exeption("Error in recvfrom");
     this->getPacketByMessage(msg);
