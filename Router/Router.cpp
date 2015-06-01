@@ -50,7 +50,8 @@ void Router::run()
 	                {
 	                    char packet[MAX_BUFFER_SIZE];
 	                    read(client_fd, packet, MAX_BUFFER_SIZE);
-	                    send_message(packet, client_fd);
+	                    cout<<packet<<endl;
+	                    //send_message(packet, client_fd);
 	                    //send_message(result, client_fd);
 	                    //FD_CLR(client_fd, &router_fds); DC
 	                    /*

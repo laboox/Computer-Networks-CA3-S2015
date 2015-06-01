@@ -2,7 +2,7 @@ include ../Makefile
 
 all: Router.out
 Router.out: main.o
-	$(CC) *.o $(CLIBS) -o Router 
+	$(CC) *.o $(CLIBS) -o Router.out
 main.o: main.cpp Router.o
 	$(CC) $(CFLAGS) -c main.cpp
 Router.o: Router.cpp Router.h
