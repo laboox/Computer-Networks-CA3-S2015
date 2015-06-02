@@ -16,4 +16,5 @@ private:
     string name;
     address multiIP;
     set<string> aza;
+    string data;
 };

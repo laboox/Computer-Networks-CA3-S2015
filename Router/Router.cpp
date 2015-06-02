@@ -387,9 +387,7 @@ void Router::parse_packet(Packet p, int client_fd)
         return;
 	if(p.getType()==UPDATE)
 		update(p, client_fd);
-	else if(p.getType()==UNICAST_DATA)
-		pass_unicast_data(p);
-	else if(p.getType()==MULTICAST_DATA)
+	else if(p.getType()==DATA)
 		pass_multicast_data(p);
 	else if(p.getType()==ROUTER_CONNECT)
 		accept_connection(p, client_fd);

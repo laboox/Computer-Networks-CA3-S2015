@@ -62,6 +62,7 @@ void GroupServer::run(){
             res.setSource(IP);
             res.setDest(multiIP);
             res.setData(p.getDataStr());
+            data+=p.getDataStr()+"\n";
             res.send(routerFd);
         }
     }
