@@ -24,7 +24,7 @@ SuperClient::SuperClient(address IP, address serverIp, int routerPort){
 void SuperClient::sendUnicast(address destIP, string msg)
 {
     Packet p;
-    p.setType(UNICAST_DATA);
+    p.setType(DATA);
     p.setSource(IP);
     p.setDest(destIP);
     p.send(routerFd);

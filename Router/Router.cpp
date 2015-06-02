@@ -23,7 +23,7 @@ void Router::Eth(string ethCardNum)
 
 void Router::NoEth(string ethCardNum)
 {
-	map<string, vector<eth_fd_cost> > routing_table;
+	/*map<string, vector<eth_fd_cost> > routing_table;
 	map<string, vector<eth_fd> > eth_to_eth_fd; 
 	
 	for(int i=0; i<ethernet_cards.size(); i++)
@@ -35,10 +35,11 @@ void Router::NoEth(string ethCardNum)
 			return;
 		}
 	throw Exeption(ethCardNum+"Not found to remove");
-	/*
+	
+
 	for(map<string, vector<eth_fd> >::iterator it=eth_to_eth_fd.begin(); it!=eth_to_eth_fd.end(); ++it)
     {
-
+    	vector<eth_fd> v=it->ETH_FDs;
 
     }*/
 	//TODO send remove packet to adjacents
