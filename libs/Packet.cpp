@@ -134,7 +134,6 @@ void Packet::getPacketByMessage ( char* pack ){
             crc[(i-336)%48] = pack[i/8] & (1<<(i%8)) ;
         }
     }
-    cerr<<"packet recived\n";
 }
 
 void Packet::decTtl(){
@@ -168,7 +167,6 @@ void Packet::recive(int sockfd)
 {
     char msg[MSG_LEN] = {0};
     int n=read(sockfd, msg, MSG_LEN);
-    sh(n);
     if(n<0)
         throw Exeption("Error in recvfrom");
     this->getPacketByMessage(msg);
