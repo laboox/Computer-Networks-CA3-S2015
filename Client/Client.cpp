@@ -32,14 +32,14 @@ void Client::run(){
         		{
 	                if(client_fd==0)
 	                {
-                        cerr<<"in recive\n";
+                        //cerr<<"in recive\n";
 	                    string cmd;
                         getline(cin, cmd);
 	                    parseCmd(cmd);
 	                }
 	                else if(client_fd==routerFd)
 	                {
-                        cerr<<"sock recive\n";
+                        //cerr<<"sock recive\n";
                         Packet p;
                         p.recive(routerFd);
                         parsePacket(p);
@@ -67,6 +67,10 @@ void Client::parsePacket(Packet p){
         cout<<"Groups are:\n";
         cout<<p.getDataStr();
     }
+    else if(p.getType() == DATA){
+        SuperClient::reciveUnicast(p);
+    }
+
 }
 
 void Client::parseCmd(string line){
@@ -95,6 +99,33 @@ void Client::parseCmd(string line){
             throw Exeption("invalid cmd");
         }
     }
+    else if(cmd0=="Send"){
+        if(iss>>cmd1 && cmd1=="message"){
+            string message;
+            getline(iss, message);
+
+        } else {
+            throw Exeption("invalid cmd");
+        }
+    }
+    else if(cmd0=="SendUniCast"){
+        if(iss>>cmd1>>cmd2){
+            SuperClient::sendUnicast(stringToAddr(cmd1), cmd2);
+        } else {
+            throw Exeption("invalid cmd");
+        }
+    }
+}
+
+void Client::sendMessage(string message){
+    if(selGroup == "")
+        throw Exeption("no Group selected!\n");
+    Packet p;
+    p.setType(SEND_MESSAGE);
+    p.setSource(IP);
+    p.setDest(groups[selGroup]);
+    p.setData(message);
+    p.send(routerFd);
 }
 
 void Client::getGroupList(){

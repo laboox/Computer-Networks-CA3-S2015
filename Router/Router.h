@@ -19,6 +19,7 @@ typedef pair<eth_fd, int> eth_fd_cost;
 #define MULTICAST_IP first
 #define UNICAST_IPs second
 #define CLIENT_IP first
+#define CLIENT_FD second
 #define ETH_FD_COSTs second
 
 class Router

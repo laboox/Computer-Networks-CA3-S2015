@@ -35,7 +35,13 @@ void GroupServer::run(){
         p.recive(routerFd);
         if(p.getType()==GET_GROUPS_LIST){
             sendGroupsList(p.getSource());
+        } 
+        else if(p.getType()==REQ_JOIN){
+            string ip = p.getDataStr();
+            stringToAddr(ip);
+            //TODO add ip to broadcast ip
         }
+        
     }
 }
 

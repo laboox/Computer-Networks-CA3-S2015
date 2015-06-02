@@ -16,5 +16,4 @@ public:
 private:
     string name;
     address multiIP;
-    vector<pair<string, address> > groups;
 };

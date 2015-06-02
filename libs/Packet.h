@@ -37,6 +37,7 @@ enum PacketType{
     REQ_JOIN,
     REQ_LEAVE,
     SEND_FILE,
+    SEND_MESSAGE,
     REQ_SERVER,
     ACCEPT_CONNECTION
 };
