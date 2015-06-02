@@ -12,7 +12,6 @@ class GroupServer: public SuperClient{
 public:
     GroupServer(string name, address multiIP, address IP, address serverIp, int routerPort);
     void run();
-    void sendGroupsList(address dest);
 private:
     string name;
     address multiIP;

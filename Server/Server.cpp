@@ -58,7 +58,6 @@ void Server::sendGroupsList(address dest){
     res.setType(GET_GROUPS_LIST);
     res.setDest(dest);
     res.setSource(IP);
-    gr+="g";
     for(int i=0;i<groups.size();i++){
         gr+=groups[i].first + " " + addrToString(groups[i].second) + "\n";
     }

@@ -12,6 +12,7 @@ int main(int argc, char *argv[]){
     if(argc<5){
         cout<<"Usage is ./Client.out #name #server_ip #router_ip #router_port";
     }
+    sh(argv[2]);
     string name = argv[1];
     address serverIp = stringToAddr(argv[2]);
     address routerIp = stringToAddr(argv[3]);

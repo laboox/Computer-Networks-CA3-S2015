@@ -20,7 +20,7 @@ void Router::run()
     FD_SET(0, &router_fds);
     FD_SET(router_fd, &router_fds);
     int i=0;
-    int needfd[2];
+    int needfd[3];
     
     int max_fd = router_fd;
 	while(true){
@@ -44,16 +44,20 @@ void Router::run()
 	                }
 	                else if(client_fd!=router_fd)
 	                {
-                        cout<<"forwarding\n";
                         Packet p;
 	                    p.recive(client_fd);
-                        if(client_fd == needfd[0]){
+                        cout<<"forwarding to "<< addrToString(p.getDest()) <<"\n";
+                        if(addrToString(p.getDest())=="0.0.0.0"){
+                            cerr<<"send to: "<<needfd[0]<<endl;
+                            p.send(needfd[0]);
+                        }
+                        else if(addrToString(p.getDest())=="1.1.1.1"){
                             cerr<<"send to: "<<needfd[1]<<endl;
                             p.send(needfd[1]);
                         }
-                        else{
-                            cerr<<"send to: "<<needfd[0]<<endl;
-                            p.send(needfd[0]);
+                        else if(addrToString(p.getDest())=="2.2.2.2"){
+                            cerr<<"send to: "<<needfd[2]<<endl;
+                            p.send(needfd[2]);
                         }
 	                }
 	                else

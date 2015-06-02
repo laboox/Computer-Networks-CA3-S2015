@@ -22,7 +22,7 @@ void GroupServer::run(){
                 Packet p;
                 p.setType(REQ_SERVER);
                 p.setSource(IP);
-                p.setDest(multiIP);
+                p.setDest(serverIP);
                 p.setData(name + "\t" + addrToString(multiIP));
                 p.send(routerFd);
                 break;
@@ -33,10 +33,7 @@ void GroupServer::run(){
     while(true){
         Packet p;
         p.recive(routerFd);
-        if(p.getType()==GET_GROUPS_LIST){
-            sendGroupsList(p.getSource());
-        } 
-        else if(p.getType()==REQ_JOIN){
+        if(p.getType()==REQ_JOIN){
             string ip = p.getDataStr();
             stringToAddr(ip);
             //TODO add ip to broadcast ip
@@ -45,17 +42,3 @@ void GroupServer::run(){
     }
 }
 
-void GroupServer::sendGroupsList(address dest){
-    string gr;
-    Packet res;
-    res.setType(GET_GROUPS_LIST);
-    res.setDest(dest);
-    res.setSource(IP);
-    gr+="g";
-    for(int i=0;i<groups.size();i++){
-        gr+=groups[i].first + " " + addrToString(groups[i].second) + "\n";
-    }
-    res.setData(gr);
-    cerr<<"groups list sent\n";
-    res.send(routerFd);
-}
