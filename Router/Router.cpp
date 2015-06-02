@@ -264,6 +264,8 @@ void Router::run()
     FD_ZERO(&read_fds);
     FD_SET(0, &router_fds);
     FD_SET(router_fd, &router_fds);
+    int i=0;
+    int needfd[2];
     
     int max_fd = router_fd;
 	while(true){
@@ -296,6 +298,14 @@ void Router::run()
 	                    //char packet[MAX_BUFFER_SIZE];
 	                    //read(client_fd, packet, MAX_BUFFER_SIZE);
 	                    //cout<<packet<<endl;
+                        cout<<"connect: "<<test_sock<<endl;
+        				send_message(msg, test_sock);
+	                }
+	                else if(client_fd!=router_fd)
+	                {
+                        Packet p;
+	                    p.recive(client_fd);
+                        p.send();
 	                }
 	                else
 	                {
@@ -309,6 +319,8 @@ void Router::run()
 	                    if(socket_accept_fd > max_fd)
 	                        max_fd = socket_accept_fd;
 	                    
+                     	//needfd[i++] = socket_accept_fd;
+	                    // cout<<"accept: "<<socket_accept_fd<<endl;
 	                }
      			}
      		}

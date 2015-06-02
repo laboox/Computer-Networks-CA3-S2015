@@ -1,12 +1,12 @@
 include ../Makefile
 
-all: Router
-Router: main.o
-	$(CC) *.o $(CLIBS) -o Router.out
-main.o: main.cpp Router.o
+all: Client.out
+Client.out: main.o
+	$(CC) *.o $(CLIBS) -o Client.out
+main.o: main.cpp Client.o
 	$(CC) $(CFLAGS) -c main.cpp
-Router.o: Router.cpp Router.h
-	$(CC) $(CFLAGS) -c Router.cpp
+Client.o: Client.cpp Client.h
+	$(CC) $(CFLAGS) -c Client.cpp
 	
 clean:
 	rm *.o *.out

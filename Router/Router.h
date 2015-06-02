@@ -18,6 +18,15 @@ class Router
 {
 public:
 	Router(int router_port);
+	void Eth(string ethCardNum);
+	void NoEth(string ethCardNum);
+	void connectEth(string myEthCard, string peerEthCard, int peer_listenPort);
+	void acceptConnection(Packet p, int client_fd);
+	void pass_data(Packet p);
+	void join_update(Packet p, int client_fd);
+	void update(Packet p, int client_fd);
+	void update_and_broadcast(address dest, int cost);
+	void parse_packet(Packet p, int client_fd);
 	void parse_cmd(string cmd);
 	void run();
 
