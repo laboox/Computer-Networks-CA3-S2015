@@ -27,6 +27,8 @@ int main(int argc, char *argv[]){
                     IP = stringToAddr(ip);
                     cout<<"ip "<<addrToString(IP)<<" set.\n";
                     break;
+                } else {
+                    cout <<"You Should Set IP Berfor anything!\n";
                 }
             } else {
                 cout <<"You Should Set IP Berfor anything!\n";

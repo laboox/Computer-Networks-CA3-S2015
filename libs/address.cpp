@@ -25,7 +25,7 @@ address stringToAddr(string str){
     address ret;
     ret.reset();
     unsigned char ip[4] = {0};
-    if(sscanf(str.c_str(), "%d.%d.%d.%d",ip, ip+1, ip+2, ip+3)<7)
+    if(sscanf(str.c_str(), "%d.%d.%d.%d",ip, ip+1, ip+2, ip+3)<=0)
         throw Exeption("error parsing address");
     for(int i=0;i<ret.size();i++){
         ret[i] = ip[i/8] & (1<<i%8);

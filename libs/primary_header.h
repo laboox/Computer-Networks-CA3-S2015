@@ -22,12 +22,8 @@
 
 #define sh(x) cerr<<#x<<" = "<<x<<endl;
 
-#define STDIN 0
-
 #define MSG_LEN 48
 #define STDIN 0
-
-#define SERVER_ADDR 1000
 
 using namespace std;
 

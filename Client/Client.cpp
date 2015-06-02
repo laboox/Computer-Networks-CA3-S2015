@@ -15,8 +15,9 @@ void Client::run(){
     fd_set router_fds, read_fds;
     FD_ZERO(&router_fds);
     FD_ZERO(&read_fds);
-    FD_SET(STDIN, &router_fds);
+    FD_SET(0, &router_fds);
     FD_SET(routerFd, &router_fds);
+    sh(routerFd);
     
     int max_fd = routerFd;
 	while(true){
@@ -29,14 +30,16 @@ void Client::run(){
         	{
         		if(FD_ISSET(client_fd , &read_fds))
         		{
-	                if(client_fd==STDIN)
+	                if(client_fd==0)
 	                {
+                        cerr<<"in recive\n";
 	                    string cmd;
                         getline(cin, cmd);
 	                    parseCmd(cmd);
 	                }
-	                else
+	                else if(client_fd==routerFd)
 	                {
+                        cerr<<"sock recive\n";
                         Packet p;
                         p.recive(routerFd);
                         parsePacket(p);
@@ -51,7 +54,7 @@ void Client::run(){
     }
 }
 
-void updateGroups(string data){
+void Client::updateGroups(string data){
     istringstream iss(data);
     string name, addr;
     while(iss>>name>>addr){
@@ -59,8 +62,9 @@ void updateGroups(string data){
     }
 }
 
-void Client::parsePacket(Packet& p){
+void Client::parsePacket(Packet p){
     if(p.getType() == GET_GROUPS_LIST){
+        cout<<"Groups are:\n";
         cout<<p.getDataStr();
     }
 }
@@ -68,6 +72,7 @@ void Client::parsePacket(Packet& p){
 void Client::parseCmd(string line){
     string cmd0, cmd1, cmd2;
     istringstream iss(line);
+    iss>>cmd0;
     if(cmd0=="Get"){
         if(iss>>cmd1>>cmd2 && cmd1=="group" && cmd2=="list"){
             getGroupList();
@@ -92,7 +97,7 @@ void Client::parseCmd(string line){
     }
 }
 
-void getGroupList(){
+void Client::getGroupList(){
     Packet p;
     p.setType(GET_GROUPS_LIST);
     p.setSource(IP);

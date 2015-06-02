@@ -334,9 +334,17 @@ void Router::run()
 	                }
 	                else if(client_fd!=router_fd)
 	                {
+                        cout<<"forwarding\n";
                         Packet p;
 	                    p.recive(client_fd);
-                        //p.send();
+                        if(client_fd == needfd[0]){
+                            cerr<<"send to: "<<needfd[1]<<endl;
+                            p.send(needfd[1]);
+                        }
+                        else{
+                            cerr<<"send to: "<<needfd[0]<<endl;
+                            p.send(needfd[0]);
+                        }
 	                }
 	                else
 	                {
@@ -349,7 +357,6 @@ void Router::run()
 	                    FD_SET(socket_accept_fd, &router_fds);
 	                    if(socket_accept_fd > max_fd)
 	                        max_fd = socket_accept_fd;
-	                    
                      	//needfd[i++] = socket_accept_fd;
 	                    //cout<<"accept: "<<socket_accept_fd<<endl;
 	                }
