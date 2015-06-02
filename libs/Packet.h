@@ -26,12 +26,10 @@ typedef bitset<ADDR_LEN> address;
 
 enum PacketType{
     ACK,
-    JOIN_UPDATE,
     UPDATE,
-    SET_ADDR,
-    REQ_ADDR,
     DATA,
-    CONNECT,
+    ROUTER_CONNECT,
+    CLIENT_CONNECT,
     DISCONNECT,
     SETUPSERVICE,
     ERROR,
@@ -39,8 +37,8 @@ enum PacketType{
     REQ_READ,
     REQ_WRITE,
     SEND_FILE,
-    APPEND_FILE,
-    REQ_SERVER
+    REQ_SERVER,
+    ACCEPT_CONNECTION
 };
 
 class Packet {

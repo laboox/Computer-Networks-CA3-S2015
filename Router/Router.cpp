@@ -12,7 +12,7 @@ Router::Router(int router_port)
     cout<<"Router bind on port "<<router_port<<endl;
 }
 
-void Eth(string ethCardNum)
+void Router::Eth(string ethCardNum)
 {
 	if(eth_cost.find(ethCardNum) != eth_cost.end())
 		throw Exeption("Repeated EthCardNum");
@@ -21,7 +21,7 @@ void Eth(string ethCardNum)
 	cout<<"Ethernet Card "<<ethCardNum<<" added successfully";
 }
 
-void NoEth(string ethCardNum)
+void Router::NoEth(string ethCardNum)
 {
 	for(int i=0; i<ethernet_cards.size(); i++)
 		if(ethernet_cards[i] == ethCardNum)
@@ -53,151 +53,182 @@ void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPor
 	if(peer_listenPort == router_port)
         throw Exeption("You can't connect yourself");
     
-    if(fdsOfeth.find(myEthCard)==fdsOfeth.end())
+    if(eth_to_eth_fd.find(myEthCard)==eth_to_eth_fd.end())
     	throw Exeption("You must add this eth first");
 
-    int connect_fd;
-    connect("localhost", peer_listenPort, &connect_fd);
+    int peer_fd;
+    connect("localhost", peer_listenPort, &peer_fd);
     
 
     Packet p;
-    p.setType(CONNECT);
+    p.setType(ROUTER_CONNECT);
     p.setSource(address(router_port));
-    p.setData(myEthCard+"\n"+peerEthCard);
-    p.send(connect_fd);
+    p.setData(myEthCard+" "+peerEthCard);
+    p.send(peer_fd);
 
-    p.recive(connect_fd);
+    p.recive(peer_fd);
     if(p.getType()==ERROR)
     	throw Exeption(p.getDataStr());
 
-    for(map<address, vector<eth_fd_cost> >::iterator it=routing_table.begin(); it!=routing_table.end(); ++it)
+    for(map<string, vector<eth_fd_cost> >::iterator it=routing_table.begin(); it!=routing_table.end(); ++it)
     {
     	vector<eth_fd_cost> v=routing_table[it->DEST];
-    	int minCost=INFINITY;
+    	int minCost=INF;
     	for(int i=0; i<v.size(); i++)
     		minCost=min(minCost, v[i].COST);
 
         Packet p;
-        p.setType(JOIN_UPDATE);
-        //p.setSource(address(peerEthCard));
+        p.setType(UPDATE);
         p.setDest(address(it->DEST));
-        p.setData(peerEthCard+"\n"+itoa(minCost));
-        p.send(connect_fd);
+        p.setData(peerEthCard+" "+itoa(minCost));
+        p.send(peer_fd);
     }
 
-    fdsOfeth[myEthCard].push_back(connect_fd);
+    eth_to_eth_fd[myEthCard].push_back(eth_fd(peerEthCard, peer_fd));
 	
 	cout<<myEthCard<<" connect to "<<peerEthCard<<" of port "<<peer_listenPort<<"successfully"<<endl;
 
 	//TODO accept conection
 }
 
-void Router::acceptConnection(Packet p, int client_fd)
+void Router::accept_connection(Packet p, int client_fd)
 {
 	string myEthCard, peerEthCard;
-	int peer_listPort=p.getSource().u_long();
-	string data=p.getDataStr();
-	stringstream ss(data);
-	getline(ss,peerEthCard);
-	getline(ss,myEthCardNum);
-
-	if(fdsOfeth.find(myEthCard)==fdsOfeth.end())
-    {
+	int peer_listPort=p.getSource().to_ulong();
+	stringstream ss(p.getDataStr());
+	ss >> peerEthCard >> myEthCard;
+	
+	bool found=false;
+	for(int i=0; i<ethernet_cards.size(); i++)
+		if(ethernet_cards[i]==myEthCard)
+			found=true;
+	if(! found)
+	{
     	Packet p;
     	p.setType(ERROR);
-    	p.setData("port "+router_port+"has'nt any "+myEthCardNum);
+    	p.setData("this port has'nt any "+myEthCard);
     	p.send(client_fd);
     	return;
     }
 
-	vector<int> v=fdsOfeth[myEthCard];
+	p.send(ACK);
+	cout<<"I send ack packet to "<<client_fd<<endl;
+
+	vector<eth_fd> v=eth_to_eth_fd[myEthCard];
 	for(int i=0; i<v.size(); i++)
-		if(v[i]==client_fd)
+		if(v[i]._FD==client_fd && v[i]._ETH==peerEthCard)
 			return;
 
 	connectEth(myEthCard, peerEthCard, peer_listPort);
 	cout<<"Connection accept with my "<<myEthCard<<" whith peer "<<peerEthCard<<" of peer port "<<peer_listPort<<endl;
 }
 
-void Router::pass_data(Packet p)
-{
-	//cout<<"passing packet from "<<p.getSource().to_string()<<" to "<<p.getDest().to_string()<<"."<<endl;
-    string dest = p.getDest().to_string();
-    if(connected_client.find(dest) != connected_client.end())
-       p.send(connected_client[dest]);
-    else if(routing_table.find(dest) != routing_table.end())
-    {
-        p.setTtl(p.getTtl()-1);
-        p.send(routing_table[dest].FD);   
-    }
-    else
-        throw Exeption("I dont know any path to send this packet");
-}
 
-void Router::join_update(Packet p, int client_fd)
+void Router::broadcast(string dest, int cost)
 {
-	string myEthCard;
-	int cost;
-	string data=p.getDataStr();
-	stringstream ss(data);
-	getline(ss,myEthCard);
-	getline(ss,cost);
-
-	update_routing_table(p.getDest(),  cost, client_fd, myEthCard);
-}
-
-void Router::update(Packet p, int client_fd)
-{
-	update_routing_table(p.getDest(), p.getDataStr(), client_fd, 0);
-}
-
-void Router::update_and_broadcast(address dest, int cost)
-{
-	for(int j=0; j<ethernet_cards; j++)
+	for(int j=0; j<ethernet_cards.size(); j++)
 	{
-		for(int k=0; k<fdsOfeth[ethernet_cards[j]]; k++)
+		for(int k=0; k<eth_to_eth_fd[ethernet_cards[j]].size(); k++)
 		{
+			int peer_fd = eth_to_eth_fd[ethernet_cards[j]][k]._FD;
+	        string peer_EthCard = eth_to_eth_fd[ethernet_cards[j]][k]._ETH;
+	        
 			Packet p;
 	        p.setType(UPDATE);
-	        p.setDest(dest);
-	        p.setData(itoa(cost));
-	        p.send(fdsOfeth[ethernet_cards[j]][k]);
+	        p.setDest(stringToAddr(dest));
+	        p.setData(peer_EthCard+" "+itoa(cost));
+	        p.send(peer_fd);
 		}
 	}
 }
 
-void Router::update_routing_table(address dest, int cost, int announcer_fd, string myEthCard)
+void Router::update_routing_table(string dest, int cost, int announcer_fd, string myEthCard)
 {
 
 	if(routing_table.find(dest)==routing_table.end())
 	{
-		routing_table[dest].push_back(eth_fd_cost(eth_fd(announcer_fd, myEthCard), cost));
-		update_and_broadcast(dest, cost+1);
+		routing_table[dest].push_back(eth_fd_cost(eth_fd(myEthCard, announcer_fd), cost+1));
+		broadcast(dest, cost+1);
+		return;
 	}
 
 	vector<eth_fd_cost> v=routing_table[dest];
 	for(int i=0; i<v.size(); i++)
 	{
-		if(v[i].FD==announcer_fd && v[i].COST>=(cost+1)) //replace 1 with exact cost = max(eth1,eth2)
+		if(v[i].ETH==myEthCard && v[i].FD==announcer_fd && v[i].COST>=(cost+1)) //replace 1 with exact cost = max(eth1,eth2)
 		{
 			routing_table[dest][i].COST=cost+1;//replace lator with exact  cost;
-			update_and_broadcast(dest, cost+1);
+			broadcast(dest, cost+1);
 		}
 	}
+}
+
+void Router::update(Packet p, int announcer_fd)
+{
+	string myEthCard;
+	int cost;
+	stringstream ss(p.getDataStr());
+	ss >> myEthCard >> cost;
+
+	update_routing_table(addrToString(p.getDest()), cost, announcer_fd, myEthCard);
+}
+
+void Router::pass_data(Packet p)
+{
+	cout<<"passing packet from "<<p.getSource().to_string()<<" to "<<p.getDest().to_string()<<"."<<endl;
+    string dest = addrToString(p.getDest());
+    if(connected_client.find(dest) != connected_client.end())
+       p.send(connected_client[dest]);
+    else if(routing_table.find(dest) != routing_table.end())
+    {
+        p.setTtl(p.getTtl()-1);
+        int indx=0;
+        int minCost=routing_table[dest][0].COST;
+        for (int i=0; i <routing_table[dest].size(); ++i)
+        {
+        	if(routing_table[dest][i].COST<minCost)
+        	{
+        		minCost=routing_table[dest][i].COST;
+        		indx=i;
+        	}
+        }
+        p.send(routing_table[dest][indx].FD);   
+    }
+    else
+        throw Exeption("I dont know any path to send this packet");
+}
+
+void Router::connect_client(Packet p, int client_fd)
+{
+	for(map<string, int> ::iterator it=connected_client.begin(); it!=connected_client.end(); it++)
+        if(it->_FD == client_fd)
+            throw Exeption("I recive a connect request from a clinent whitch I connected before");
+
+    //assume that packet data is ip of client
+    string client_ip=addrToString(p.getSource());
+    connected_client[client_ip] = client_fd;
+
+    p.setSource(address(router_port));
+    p.setDest(stringToAddr(client_ip));
+    p.setType(ACCEPT_CONNECTION);
+    p.send(client_fd);
+
+    broadcast(client_ip, 1);
+    cout<<"I connect to client "<<client_ip<<endl;
 }
 
 void Router::parse_packet(Packet p, int client_fd)
 {
 	if(p.getTtl()==0) 
         return;
-	if(p.Type==UPDATE)
-		update(p, clinet_fd);
-	if(p.Type==UPDATE)
-		joinUpdate(p, clinet_fd);
-	else if(p.Type==DATA)
+	if(p.getType()==UPDATE)
+		update(p, client_fd);
+	else if(p.getType()==DATA)
 		pass_data(p);
-	else if(p.Type==CONNECT)
-		acceptConnection(p, client_fd);
+	else if(p.getType()==ROUTER_CONNECT)
+		accept_connection(p, client_fd);
+	else if(p.getType()==CLIENT_CONNECT)
+		connect_client(p, client_fd);
 }
 
 void Router::parse_cmd(string cmd)
@@ -224,9 +255,9 @@ void Router::parse_cmd(string cmd)
 	else if(cmd_type=="Connect")
 	{
 		string myEthCard,peerEthCard;
-		int peer_listen_port;
+		int peer_listenPort;
 		if(ss >> myEthCard >> peerEthCard >> peer_listenPort)
-			connectEth(myEthCardNum, peerEthCardNum, peer_listenPort);
+			connectEth(myEthCard, peerEthCard, peer_listenPort);
 		else
 			throw Exeption("Invalid Oprand, Usage: Connect #my_EthernetCard #peer_EthernetCard #peer_listenPort");
 	}
@@ -298,14 +329,14 @@ void Router::run()
 	                    //char packet[MAX_BUFFER_SIZE];
 	                    //read(client_fd, packet, MAX_BUFFER_SIZE);
 	                    //cout<<packet<<endl;
-                        cout<<"connect: "<<test_sock<<endl;
-        				send_message(msg, test_sock);
+                        //cout<<"connect: "<<test_sock<<endl;
+        				//send_message(msg, test_sock);
 	                }
 	                else if(client_fd!=router_fd)
 	                {
                         Packet p;
 	                    p.recive(client_fd);
-                        p.send();
+                        //p.send();
 	                }
 	                else
 	                {
@@ -320,7 +351,7 @@ void Router::run()
 	                        max_fd = socket_accept_fd;
 	                    
                      	//needfd[i++] = socket_accept_fd;
-	                    // cout<<"accept: "<<socket_accept_fd<<endl;
+	                    //cout<<"accept: "<<socket_accept_fd<<endl;
 	                }
      			}
      		}
