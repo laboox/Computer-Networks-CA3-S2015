@@ -66,9 +66,14 @@ void Client::parsePacket(Packet p){
     if(p.getType() == GET_GROUPS_LIST){
         cout<<"Groups are:\n";
         cout<<p.getDataStr();
+        updateGroups(p.getDataStr());
     }
     else if(p.getType() == DATA){
-        SuperClient::reciveUnicast(p);
+        //SuperClient::reciveUnicast(p);
+        cout<<"Data: "<<p.getDataStr()<<endl;
+    }
+    else if(p.getType() == SHOW_MY_GROUPS){
+        cout<<"i'm in groups:\n"<<p.getDataStr()<<endl;
     }
 
 }
@@ -103,7 +108,14 @@ void Client::parseCmd(string line){
         if(iss>>cmd1 && cmd1=="message"){
             string message;
             getline(iss, message);
-
+            sendMessage(message);
+        } else {
+            throw Exeption("invalid cmd");
+        }
+    }
+    else if(cmd0=="Show"){
+        if(iss>>cmd1 && cmd1=="group"){
+            showGroup();
         } else {
             throw Exeption("invalid cmd");
         }
@@ -136,6 +148,14 @@ void Client::getGroupList(){
     p.send(routerFd);
 }
 
+void Client::showGroup(){
+    Packet p;
+    p.setType(SHOW_MY_GROUPS);
+    p.setSource(IP);
+    p.setDest(serverIP);
+    p.send(routerFd);
+}
+
 void Client::selectGroup(string g){
     if(groups.count(g)<=0)
         throw Exeption("Group does not exist");
@@ -152,5 +172,5 @@ void Client::joinGroup(string g){
     p.setDest(serverIP);
     p.setData(g);
     p.send(routerFd);
-    cout<<"group "<< g << " with ip " << addrToString( groups[g] ) <<" selected!\n";
+    cout<<"group "<< g << " with ip " << addrToString( groups[g] ) <<" joined!\n";
 }

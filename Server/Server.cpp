@@ -17,6 +17,9 @@ void Server::run(){
         if(p.getType()==GET_GROUPS_LIST){
             sendGroupsList(p.getSource());
         }
+        else if(p.getType()==SHOW_MY_GROUPS){
+            showMyGroups(p.getSource());
+        }
         else if(p.getType() == REQ_SERVER){
             updateGroups(p.getSource(), p.getDataStr());
         }
@@ -32,6 +35,7 @@ void Server::run(){
 void Server::joinReq(address user, string group){
     for(int i=0;i<groups.size();i++){
         if(groups[i].first == group){
+            cout<<"request joining "<<group<<endl;
             perToGroups[addrToString(user)].push_back(group);
             Packet p;
             p.setType(REQ_JOIN);
@@ -63,5 +67,19 @@ void Server::sendGroupsList(address dest){
     }
     res.setData(gr);
     cerr<<"groups list sent\n";
+    res.send(routerFd);
+}
+
+void Server::showMyGroups(address dest){
+    string gr;
+    Packet res;
+    res.setType(SHOW_MY_GROUPS);
+    res.setDest(dest);
+    res.setSource(IP);
+    for(int i=0;i<perToGroups[addrToString(dest)].size();i++){
+        gr+=perToGroups[addrToString(dest)][i]+"\n";    
+    }
+    res.setData(gr);
+    cerr<<"private list sent\n";
     res.send(routerFd);
 }

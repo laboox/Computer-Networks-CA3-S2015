@@ -19,6 +19,7 @@ public:
     void getGroupList();
     void joinGroup(string g);
     void sendMessage(string message);
+    void showGroup();
 private:
     string name;
     map<string, address> groups;

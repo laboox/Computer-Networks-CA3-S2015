@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <dirent.h>
+#include <set>
 
 #define sh(x) cerr<<#x<<" = "<<x<<endl;
 

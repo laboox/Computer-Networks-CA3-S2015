@@ -15,4 +15,5 @@ public:
 private:
     string name;
     address multiIP;
+    set<string> aza;
 };

@@ -34,11 +34,36 @@ void GroupServer::run(){
         Packet p;
         p.recive(routerFd);
         if(p.getType()==REQ_JOIN){
+            cout<<"request to join "<<p.getDataStr()<<endl;
             string ip = p.getDataStr();
-            stringToAddr(ip);
-            //TODO add ip to broadcast ip
+            aza.insert(ip);
+            Packet res;
+            res.setType(JOIN);
+            res.setDest(stringToAddr(ip));
+            res.setSource(IP);
+            res.setData(addrToString(multiIP));
+            res.send(routerFd);
         }
-        
+        else if(p.getType()==REQ_LEAVE){
+            cout<<"request to leave "<<p.getDataStr()<<endl;
+            string ip = p.getDataStr();
+            aza.erase(ip);
+            Packet res;
+            res.setType(LEAVE);
+            res.setDest(stringToAddr(ip));
+            res.setSource(IP);
+            res.setData(addrToString(multiIP));
+            res.send(routerFd);
+        }
+        else if(p.getType() == SEND_MESSAGE) {
+            cout<<"request to multicast "<<endl;
+            Packet res;
+            res.setType(DATA);
+            res.setSource(IP);
+            res.setDest(multiIP);
+            res.setData(p.getDataStr());
+            res.send(routerFd);
+        }
     }
 }
 
