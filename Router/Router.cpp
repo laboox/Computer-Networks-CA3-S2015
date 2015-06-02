@@ -143,11 +143,13 @@ void Router::broadcast(string dest, int cost)
 {
 	for(int j=0; j<ethernet_cards.size(); j++)
 	{
+		sh(ethernet_cards[j]);
 		for(int k=0; k<eth_to_eth_fd[ethernet_cards[j]].size(); k++)
 		{
 			int peer_fd = eth_to_eth_fd[ethernet_cards[j]][k]._FD;
 	        string peer_EthCard = eth_to_eth_fd[ethernet_cards[j]][k]._ETH;
 	        
+	        sh(peer_EthCard);sh(peer_fd);
 			Packet p;
 	        p.setType(UPDATE);
 	        p.setDest(stringToAddr(dest));
@@ -162,6 +164,7 @@ void Router::update_routing_table(string dest, int cost, int announcer_fd, strin
 
 	if(routing_table.find(dest)==routing_table.end())
 	{
+		cout<<"insert unicast ip "<<dest<<" to my roating table with announcer_fd = "<<announcer_fd<<endl;
 		routing_table[dest].push_back(eth_fd_cost(eth_fd(myEthCard, announcer_fd), cost+1));
 		broadcast(dest, cost+1);
 		return;
@@ -172,6 +175,7 @@ void Router::update_routing_table(string dest, int cost, int announcer_fd, strin
 	{
 		if(v[i].ETH==myEthCard && v[i].FD==announcer_fd && v[i].COST>=(cost+1)) //replace 1 with exact cost = max(eth1,eth2)
 		{
+			cout<<"update unicast ip "<<dest<<" in my roating table"<<endl;
 			routing_table[dest][i].COST=cost+1;//replace lator with exact  cost;
 			broadcast(dest, cost+1);
 		}
@@ -180,18 +184,22 @@ void Router::update_routing_table(string dest, int cost, int announcer_fd, strin
 
 void Router::update(Packet p, int announcer_fd)
 {
+	cout<<"Update packet recived from "<<announcer_fd<<endl;
 	string myEthCard;
 	int cost;
 	stringstream ss(p.getDataStr());
 	ss >> myEthCard >> cost;
 
+	sh(myEthCard);sh(cost);
 	update_routing_table(addrToString(p.getDest()), cost, announcer_fd, myEthCard);
 }
 
 void Router::pass_data(Packet p)
 {
-	cout<<"passing packet from source:"<<addrToString(p.getSource())<<" to dest:"<<addrToString(p.getDest())<<" ..."<<endl;
-    string dest = addrToString(p.getDest());
+
+	string dest = addrToString(p.getDest());
+    string source = addrToString(p.getSource());
+	cout<<"passing packet from source:"<<source<<" to dest:"<<dest<<" ..."<<endl;
     if(connected_client.find(dest) != connected_client.end())
     {
       	p.send(connected_client[dest]);
@@ -210,8 +218,9 @@ void Router::pass_data(Packet p)
         		indx=i;
         	}
         }
+        int next_hop_fd=routing_table[dest][indx].FD;
         p.send(routing_table[dest][indx].FD);   
-        cout<<"I have indirect connection to dest and I send by my routing table"<<endl;
+        cout<<"I have indirect connection to "<<dest<<" and I send by my routing table to fd = "<<next_hop_fd<<endl;
     }
     else
         throw Exeption("I dont know any path to send this packet");
@@ -227,11 +236,13 @@ void Router::connect_client(Packet p, int client_fd)
     string client_ip=addrToString(p.getSource());
     connected_client[client_ip] = client_fd;
 
-    p.setSource(address(router_port));
+    /*p.setSource(address(router_port));
     p.setDest(stringToAddr(client_ip));
     p.setType(ACCEPT_CONNECTION);
     p.send(client_fd);
+	*/
 
+    cout<<"Broadcast every body that I connect to "<<client_ip<<" ..."<<endl;
     broadcast(client_ip, 1);
     cout<<"I connect to client "<<client_ip<<endl;
 }
@@ -248,6 +259,8 @@ void Router::parse_packet(Packet p, int client_fd)
 		accept_connection(p, client_fd);
 	else if(p.getType()==CLIENT_CONNECT)
 		connect_client(p, client_fd);
+	else
+		throw Exeption("I recive a packet with unknown type");
 }
 
 void Router::parse_cmd(string cmd)
@@ -330,6 +343,11 @@ void Router::show()
 			cout<<"\t\tfd = "<<v[i].FD<<" eth = "<<v[i].ETH<<" cost = "<<v[i].COST<<endl;
 		cout<<endl;
 	}
+	cout<<endl<<endl;
+	cout<<"Direct Connected IPs:"<<endl;
+	for(map<string, int> ::iterator it=connected_client.begin(); it!=connected_client.end(); it++)
+		cout<<"\tclient ip = "<<(it->CLIENT_IP)<<" fd "<<(it->CLIENT_FD)<<endl;
+		
 	cout<<endl<<endl;
 }
 
