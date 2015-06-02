@@ -18,7 +18,7 @@ void Router::Eth(string ethCardNum)
 		throw Exeption("Repeated EthCardNum");
 	ethernet_cards.push_back(ethCardNum);
 	eth_cost[ethCardNum]=DEFAULT_COST;
-	cout<<"Ethernet Card "<<ethCardNum<<" added successfully";
+	cout<<"Ethernet Card "<<ethCardNum<<" added successfully"<<endl;
 }
 
 void Router::NoEth(string ethCardNum)
@@ -28,7 +28,7 @@ void Router::NoEth(string ethCardNum)
 		{
 			ethernet_cards.erase(ethernet_cards.begin()+i);
 			eth_cost.erase(ethCardNum);
-			cout<<"Ethernet Card "<<ethCardNum<<" removed successfully";
+			cout<<"Ethernet Card "<<ethCardNum<<" removed successfully"<<endl;
 			return;
 		}
 	throw Exeption(ethCardNum+"Not found to remove");
@@ -53,8 +53,12 @@ void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPor
 	if(peer_listenPort == router_port)
         throw Exeption("You can't connect yourself");
     
-    if(eth_to_eth_fd.find(myEthCard)==eth_to_eth_fd.end())
-    	throw Exeption("You must add this eth first");
+    bool found=false;
+	for(int i=0; i<ethernet_cards.size(); i++)
+		if(ethernet_cards[i]==myEthCard)
+			found=true;
+	if(! found)
+		throw Exeption("You must add this eth first");
 
     int peer_fd;
     connect("localhost", peer_listenPort, &peer_fd);
@@ -68,11 +72,13 @@ void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPor
 
     cout<<"send connection request packet to router on "<<peer_listenPort<<" ..."<<endl;
     
+    /*
     p.recive(peer_fd);
     cout<<"recive response from router on "<<peer_listenPort<<" ..."<<endl;
 
     if(p.getType()==ERROR)
     	throw Exeption(p.getDataStr());
+	*/
 
     for(map<string, vector<eth_fd_cost> >::iterator it=routing_table.begin(); it!=routing_table.end(); ++it)
     {
@@ -91,9 +97,9 @@ void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPor
     cout<<"send update packets to router on "<<peer_listenPort<<" ..."<<endl;
 
     eth_to_eth_fd[myEthCard].push_back(eth_fd(peerEthCard, peer_fd));
+    fd_to_port[peer_fd]=peer_listenPort;
 	
-	cout<<myEthCard<<" connect to "<<peerEthCard<<" of port "<<peer_listenPort<<"successfully"<<endl;
-
+	cout<<myEthCard<<" connect to "<<peerEthCard<<" of port "<<peer_listenPort<<" successfully"<<endl;
 }
 
 void Router::accept_connection(Packet p, int client_fd)
@@ -113,17 +119,19 @@ void Router::accept_connection(Packet p, int client_fd)
 
     	Packet p;
     	p.setType(ERROR);
-    	p.setData("this port has'nt any "+myEthCard);
+    	p.setData("No "+myEthCard);
     	p.send(client_fd);
     	return;
     }
-    else
+    /*else
 		p.send(ACK);
+	*/
+
 	cout<<"I send ack packet to "<<client_fd<<endl;
 
 	vector<eth_fd> v=eth_to_eth_fd[myEthCard];
 	for(int i=0; i<v.size(); i++)
-		if(v[i]._FD==client_fd && v[i]._ETH==peerEthCard)
+		if(fd_to_port[v[i]._FD]==p.getSource().to_ulong() && v[i]._ETH==peerEthCard)
 			return;
 
 	connectEth(myEthCard, peerEthCard, peer_listPort);
@@ -272,8 +280,11 @@ void Router::parse_cmd(string cmd)
 		else
 			throw Exeption("Invalid Oprand, Usage: Connect #my_EthernetCard #peer_EthernetCard #peer_listenPort");
 	}
-	/*
-	else if(cmd_type=="ChangeCost")
+	else if(cmd_type=="Show")
+	{
+		show();
+	}
+	/*else if(cmd_type=="ChangeCost")
 	{
 		string ethCard;
 		int newCost;
@@ -290,13 +301,36 @@ void Router::parse_cmd(string cmd)
 		else
 			throw Exeption("Invalid Oprand, Usage: Disconnect #EthernetCard");
 	}
-	else if(cmd_type=="Show")
-	{
-		show();
-	}
 	else
 		throw Exeption("Invalid Command");
 	*/
+}
+
+void Router::show()
+{
+	cout<<"Multicast IP Table:"<<endl;
+	for(map<string, vector<string>> ::iterator it=multicast_ip.begin(); it!=multicast_ip.end(); it++)
+	{
+		string multicast_ip=it->MULTICAST_IP;
+		cout<<"\tmulticast ip = "<<multicast_ip<<" whitch include unicast ips:"<<endl;
+		vector<string> v=it->UNICAST_IPs;
+		for(int i=0; i<v.size(); i++)
+			cout<<"\t\t"<<v[i]<<endl;
+		cout<<endl;
+	}
+	cout<<endl<<endl;
+
+	cout<<"Unicast Routing table:"<<endl;
+	for(map<string, vector<eth_fd_cost> >  ::iterator it=routing_table.begin(); it!=routing_table.end(); it++)
+	{
+		string client_ip=it->CLIENT_IP;
+		cout<<"\tclient ip = "<<client_ip<<" whitch I have diffrent path from below eth, fd and cost"<<endl;
+		vector<eth_fd_cost> v=it->ETH_FD_COSTs;
+		for (int i=0; i<v.size(); ++i)
+			cout<<"\t\tfd = "<<v[i].FD<<" eth = "<<v[i].ETH<<" cost = "<<v[i].COST<<endl;
+		cout<<endl;
+	}
+	cout<<endl<<endl;
 }
 
 void Router::run()

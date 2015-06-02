@@ -16,6 +16,10 @@ typedef pair<eth_fd, int> eth_fd_cost;
 #define COST second
 #define DEST first
 #define INF 1000
+#define MULTICAST_IP first
+#define UNICAST_IPs second
+#define CLIENT_IP first
+#define ETH_FD_COSTs second
 
 class Router
 {
@@ -32,6 +36,7 @@ public:
 	void Eth(string ethCardNum);
 	void NoEth(string ethCardNum);
 	void connectEth(string myEthCard, string peerEthCard, int peer_listenPort);
+	void show();
 	void parse_cmd(string cmd);
 	
 	void run();
@@ -40,11 +45,12 @@ private:
 	int router_port;
 	int router_fd;
 
-	map<string, vector<address> > multicast_ip;
+	map<string, vector<string> > multicast_ip;
 	
 	map<string, vector<eth_fd_cost> > routing_table;
 	map<string, vector<eth_fd> > eth_to_eth_fd; 
-	
+	map<int, int> fd_to_port;
+
 	vector<string> ethernet_cards;
 	map<string, int> eth_cost;
 
