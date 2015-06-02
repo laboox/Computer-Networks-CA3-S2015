@@ -58,7 +58,7 @@ void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPor
 
     int peer_fd;
     connect("localhost", peer_listenPort, &peer_fd);
-    
+	cout<<"connect to socket of the router on "<<peer_listenPort<<" ..."<<endl;    
 
     Packet p;
     p.setType(ROUTER_CONNECT);
@@ -66,7 +66,11 @@ void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPor
     p.setData(myEthCard+" "+peerEthCard);
     p.send(peer_fd);
 
+    cout<<"send connection request packet to router on "<<peer_listenPort<<" ..."<<endl;
+    
     p.recive(peer_fd);
+    cout<<"recive response from router on "<<peer_listenPort<<" ..."<<endl;
+
     if(p.getType()==ERROR)
     	throw Exeption(p.getDataStr());
 
@@ -84,11 +88,12 @@ void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPor
         p.send(peer_fd);
     }
 
+    cout<<"send update packets to router on "<<peer_listenPort<<" ..."<<endl;
+
     eth_to_eth_fd[myEthCard].push_back(eth_fd(peerEthCard, peer_fd));
 	
 	cout<<myEthCard<<" connect to "<<peerEthCard<<" of port "<<peer_listenPort<<"successfully"<<endl;
 
-	//TODO accept conection
 }
 
 void Router::accept_connection(Packet p, int client_fd)
@@ -104,14 +109,16 @@ void Router::accept_connection(Packet p, int client_fd)
 			found=true;
 	if(! found)
 	{
+		cout<<"I recive connection request to "<<myEthCard<<" witch i couldnt find it in my eth list"<<endl;
+
     	Packet p;
     	p.setType(ERROR);
     	p.setData("this port has'nt any "+myEthCard);
     	p.send(client_fd);
     	return;
     }
-
-	p.send(ACK);
+    else
+		p.send(ACK);
 	cout<<"I send ack packet to "<<client_fd<<endl;
 
 	vector<eth_fd> v=eth_to_eth_fd[myEthCard];
@@ -175,10 +182,13 @@ void Router::update(Packet p, int announcer_fd)
 
 void Router::pass_data(Packet p)
 {
-	cout<<"passing packet from "<<p.getSource().to_string()<<" to "<<p.getDest().to_string()<<"."<<endl;
+	cout<<"passing packet from source:"<<addrToString(p.getSource())<<" to dest:"<<addrToString(p.getDest())<<" ..."<<endl;
     string dest = addrToString(p.getDest());
     if(connected_client.find(dest) != connected_client.end())
-       p.send(connected_client[dest]);
+    {
+      	p.send(connected_client[dest]);
+      	cout<<"I have direct connection to dest and I send it"<<endl;
+    }
     else if(routing_table.find(dest) != routing_table.end())
     {
         p.setTtl(p.getTtl()-1);
@@ -193,6 +203,7 @@ void Router::pass_data(Packet p)
         	}
         }
         p.send(routing_table[dest][indx].FD);   
+        cout<<"I have indirect connection to dest and I send by my routing table"<<endl;
     }
     else
         throw Exeption("I dont know any path to send this packet");
@@ -314,24 +325,14 @@ void Router::run()
 	                    string cmd;
 	                    getline(cin,cmd);
 	                    parse_cmd(cmd);
-	                    /*int port; cin>>port;
-	                    string msg; cin>>msg;
-	                    int test_sock;
-	                    connect("localhost", port, &test_sock);
-	                    cout<<test_sock;
-        				send_message(msg, test_sock);*/
         			}
 	                else if(client_fd!=router_fd)
 	                {
 	                	Packet p;
                 		p.recive(client_fd);
-                		parse_packet(p, client_fd);  
-	                    //char packet[MAX_BUFFER_SIZE];
-	                    //read(client_fd, packet, MAX_BUFFER_SIZE);
-	                    //cout<<packet<<endl;
-                        //cout<<"connect: "<<test_sock<<endl;
-        				//send_message(msg, test_sock);
+                		parse_packet(p, client_fd); 
 	                }
+	                /*
 	                else if(client_fd!=router_fd)
 	                {
                         cout<<"forwarding\n";
@@ -346,6 +347,7 @@ void Router::run()
                             p.send(needfd[0]);
                         }
 	                }
+	                */
 	                else
 	                {
 	                    socklen_t client_address_size;
