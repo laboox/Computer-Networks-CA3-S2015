@@ -8,7 +8,7 @@
 SuperClient::SuperClient(address IP, address serverIp, int routerPort){
     char portstr[128]={0};
     this->IP = IP;
-    this->serverIP = serverIP;
+    this->serverIP = serverIp;
     connect("localhost", routerPort, &routerFd);
     //TODO other connect procedurals
 
@@ -18,6 +18,7 @@ SuperClient::SuperClient(address IP, address serverIp, int routerPort){
     p.send(routerFd);
 
     cout<<"Connect to router "<<routerPort<<" successfully"<<endl;
+    cout<<"ip: "<<IP<<" server IP: "<<serverIP<<endl;
 }
 
 void SuperClient::sendUnicast(address destIP, string msg)
@@ -33,4 +34,13 @@ void SuperClient::sendUnicast(address destIP, string msg)
 void SuperClient::reciveUnicast(Packet p)
 {
 	cout <<"I recive packet with data = "<<p.getDataStr()<<" from source = "<<addrToString(p.getSource())<<endl;
+}
+
+void SuperClient::sendError(string message, address dest){
+    Packet p;
+    p.setType(ERROR);
+    p.setSource(IP);
+    p.setDest(dest);
+    p.setData(message);
+    p.send(routerFd);
 }

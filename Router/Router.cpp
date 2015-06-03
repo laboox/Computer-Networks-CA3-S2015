@@ -395,12 +395,15 @@ void Router::parse_packet(Packet p, int client_fd)
 		accept_connection(p, client_fd);
 	else if(p.getType()==CLIENT_CONNECT)
 		connect_client(p, client_fd);
-	else if(p.getType()==REQ_JOIN)
+	else if(p.getType()==JOIN)
 		join(p);
-	else if(p.getType()==REQ_LEAVE)
+	else if(p.getType()==LEAVE)
 		leave(p);
 	else
-		throw Exeption("I recive a packet with unknown type");
+	{
+		pass_unicast_data(p);
+		//throw Exeption("I recive a packet with unknown type");
+	}
 }
 
 void Router::parse_cmd(string cmd, int& peer_fd)

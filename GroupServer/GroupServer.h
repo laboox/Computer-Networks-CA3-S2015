@@ -10,10 +10,10 @@
 
 class GroupServer: public SuperClient{
 public:
-    GroupServer(address IP, address serverIp, int routerPort);
+    GroupServer(string name, address multiIP, address IP, address serverIp, int routerPort);
     void run();
-    void sendGroupsList(address dest);
 private:
     string name;
-    vector<pair<string, address> > groups;
+    address multiIP;
+    set<string> aza;
 };

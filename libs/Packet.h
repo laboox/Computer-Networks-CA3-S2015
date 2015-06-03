@@ -27,8 +27,7 @@ typedef bitset<ADDR_LEN> address;
 enum PacketType{
     //ACK,
     UPDATE,
-    UNICAST_DATA,
-    MULTICAST_DATA,
+    DATA,
     ROUTER_CONNECT,
     CLIENT_CONNECT,
     DISCONNECT,
@@ -36,8 +35,12 @@ enum PacketType{
     GET_GROUPS_LIST,
     REQ_JOIN,
     REQ_LEAVE,
+    JOIN,
+    LEAVE,
     SEND_FILE,
+    SEND_MESSAGE,
     REQ_SERVER,
+    SHOW_MY_GROUPS
     //ACCEPT_CONNECTION
 };
 

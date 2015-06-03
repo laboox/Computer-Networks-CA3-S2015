@@ -17,6 +17,9 @@ public:
     void parsePacket(Packet p);
     void updateGroups(string data);
     void getGroupList();
+    void joinGroup(string g);
+    void sendMessage(string message);
+    void showGroup();
 private:
     string name;
     map<string, address> groups;

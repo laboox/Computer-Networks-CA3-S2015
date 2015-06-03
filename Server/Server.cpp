@@ -17,7 +17,43 @@ void Server::run(){
         if(p.getType()==GET_GROUPS_LIST){
             sendGroupsList(p.getSource());
         }
+        else if(p.getType()==SHOW_MY_GROUPS){
+            showMyGroups(p.getSource());
+        }
+        else if(p.getType() == REQ_SERVER){
+            updateGroups(p.getSource(), p.getDataStr());
+        }
+        else if(p.getType() == REQ_JOIN){
+            joinReq(p.getSource(), p.getDataStr());
+        }
+        else if(p.getType() == REQ_LEAVE){
+            
+        }
     }
+}
+
+void Server::joinReq(address user, string group){
+    for(int i=0;i<groups.size();i++){
+        if(groups[i].first == group){
+            cout<<"request joining "<<group<<endl;
+            perToGroups[addrToString(user)].push_back(group);
+            Packet p;
+            p.setType(REQ_JOIN);
+            p.setDest(groups[i].second);
+            p.setSource(IP);
+            p.setData(addrToString(user));
+            p.send(routerFd);
+        }
+    }
+    sendError("group not exist.\n", user);
+}
+
+void Server::updateGroups(address source, string data){
+    string name, mulIp;
+    istringstream iss(data);
+    iss>>name>>mulIp;
+    groups.push_back(pair<string, address>(name, source));
+    cout<<"group "<<name<<" with ip "<<mulIp<<" added.\n";
 }
 
 void Server::sendGroupsList(address dest){
@@ -26,11 +62,24 @@ void Server::sendGroupsList(address dest){
     res.setType(GET_GROUPS_LIST);
     res.setDest(dest);
     res.setSource(IP);
-    gr+="g";
     for(int i=0;i<groups.size();i++){
         gr+=groups[i].first + " " + addrToString(groups[i].second) + "\n";
     }
     res.setData(gr);
     cerr<<"groups list sent\n";
+    res.send(routerFd);
+}
+
+void Server::showMyGroups(address dest){
+    string gr;
+    Packet res;
+    res.setType(SHOW_MY_GROUPS);
+    res.setDest(dest);
+    res.setSource(IP);
+    for(int i=0;i<perToGroups[addrToString(dest)].size();i++){
+        gr+=perToGroups[addrToString(dest)][i]+"\n";    
+    }
+    res.setData(gr);
+    cerr<<"private list sent\n";
     res.send(routerFd);
 }

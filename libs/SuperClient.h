@@ -12,6 +12,7 @@
 class SuperClient{
 public:
     SuperClient(address IP, address serverIp, int routerPort);
+    void sendError(string data, address dest);
     void sendUnicast(address destIP, string msg);
     void reciveUnicast(Packet p);
     address IP;
