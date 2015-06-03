@@ -21,9 +21,9 @@ void Router::Eth(string ethCardNum)
 	cout<<"Ethernet Card "<<ethCardNum<<" added successfully"<<endl;
 }
 
-void Router::NoEth(string ethCardNum)
+void Router::NoEth(string myEthCardNum)
 {
-	/*map<string, vector<eth_fd_cost> > routing_table;
+	map<string, vector<eth_fd_cost> > routing_table;
 	map<string, vector<eth_fd> > eth_to_eth_fd; 
 	
 	for(int i=0; i<ethernet_cards.size(); i++)
@@ -41,7 +41,7 @@ void Router::NoEth(string ethCardNum)
     {
     	vector<eth_fd> v=it->ETH_FDs;
 
-    }*/
+    }
 	//TODO send remove packet to adjacents
 }
 
