@@ -21,24 +21,28 @@ typedef pair<eth_fd, int> eth_fd_cost;
 #define CLIENT_IP first
 #define CLIENT_FD second
 #define ETH_FD_COSTs second
+#define ETH_FDs second
 
 class Router
 {
 public:
 	Router(int router_port);
 	void accept_connection(Packet p, int client_fd);
-	void pass_data(Packet p);
+	void pass_unicast_data(Packet p);
+	void pass_multicast_data(Packet p);
 	void update_routing_table(string dest, int cost, int announcer_fd, string myEthCard);
 	void update(Packet p, int client_fd);
 	void broadcast(string dest, int cost);
 	void connect_client(Packet p, int client_fd);
+	void join(Packet p);
+	void leave(Packet p);
 	void parse_packet(Packet p, int client_fd);
 	
 	void Eth(string ethCardNum);
 	void NoEth(string ethCardNum);
-	void connectEth(string myEthCard, string peerEthCard, int peer_listenPort);
+	void connectEth(string myEthCard, string peerEthCard, int peer_listenPort, int& peer_fd);
 	void show();
-	void parse_cmd(string cmd);
+	void parse_cmd(string cmd, int& peer_fd);
 	
 	void run();
 
