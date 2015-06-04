@@ -21,29 +21,6 @@ void Router::Eth(string ethCardNum)
 	cout<<"Ethernet Card "<<ethCardNum<<" added successfully"<<endl;
 }
 
-void Router::NoEth(string myEthCardNum)
-{
-	map<string, vector<eth_fd_cost> > routing_table;
-	map<string, vector<eth_fd> > eth_to_eth_fd; 
-	
-	for(int i=0; i<ethernet_cards.size(); i++)
-		if(ethernet_cards[i] == ethCardNum)
-		{
-			ethernet_cards.erase(ethernet_cards.begin()+i);
-			eth_cost.erase(ethCardNum);
-			cout<<"Ethernet Card "<<ethCardNum<<" removed successfully"<<endl;
-			return;
-		}
-	throw Exeption(ethCardNum+"Not found to remove");
-	
-
-	for(map<string, vector<eth_fd> >::iterator it=eth_to_eth_fd.begin(); it!=eth_to_eth_fd.end(); ++it)
-    {
-    	vector<eth_fd> v=it->ETH_FDs;
-
-    }
-	//TODO send remove packet to adjacents
-}
 
 string itoa(int n)
 {
@@ -56,6 +33,41 @@ string itoa(int n)
     }
     return s;
 }   
+
+void Router::NoEth(string myEthCard)
+{
+	bool found=false;
+	for(int i=0; i<ethernet_cards.size(); i++)
+		if(ethernet_cards[i] == myEthCard)
+		{
+			ethernet_cards.erase(ethernet_cards.begin()+i);
+			eth_cost.erase(myEthCard);
+			cout<<"Ethernet Card "<<myEthCard<<" removed from list of ethernet_cards and their costs"<<endl;
+			found=true;
+			return;
+		}
+	if(! found)
+		throw Exeption(myEthCard+" not found to remove");
+	
+	vector<eth_fd> v=eth_to_eth_fd[myEthCard];
+
+	for(int i=0; i<v.size(); i++)
+    {
+    	Packet p;
+    	p.setType(NOETH);
+    	p.setSource(stringToAddr(myEthCard));
+    	p.setDest(stringToAddr(v[i]._ETH));
+    	p.setData(itoa(router_port));
+    	p.send(v[i]._FD);
+    }
+	cout<<"Finish disconnect news broadcast to the adjacents of my eth"<<endl;
+
+    eth_to_eth_fd.erase(myEthCard);
+    cout<<"Ethernet Card "<<myEthCard<<" removed from list of connection list of eths and their costs"<<endl;
+			
+    //TODO send remove packet to adjacents
+}
+
 
 void Router::connectEth(string myEthCard, string peerEthCard, int peer_listenPort, int& peer_fd)
 {
@@ -381,6 +393,43 @@ void Router::leave(Packet p)
 		}
 }
 
+void Router::remove_connection(Packet p, int client_fd)
+{
+	string peer_EthernetCard = addrToString(p.getSource());
+	string my_EthernetCard = addrToString(p.getDest());
+	int peer_listenPort=atoi(p.getDataStr().c_str());
+	
+	for(map<string, vector<eth_fd_cost> > ::iterator it=routing_table.begin(); it!=routing_table.end(); it++)
+	{
+		string dest=it->DEST;
+		vector<eth_fd_cost> v=routing_table[dest];
+		bool exist_path=false;
+    	for(int i=0; i<v.size(); i++)
+    		if(! (v[i].ETH==my_EthernetCard && fd_to_port[v[i].FD]==peer_listenPort))
+    			exist_path=true;
+    	if(! exist_path)
+    	{
+    		routing_table.erase(dest);
+		    for(int j=0; j<ethernet_cards.size(); j++)
+			{
+				//sh(ethernet_cards[j]);
+				for(int k=0; k<eth_to_eth_fd[ethernet_cards[j]].size(); k++)
+				{
+					int peer_fd = eth_to_eth_fd[ethernet_cards[j]][k]._FD;
+			        string peer_EthCard = eth_to_eth_fd[ethernet_cards[j]][k]._ETH;
+			        
+			        //sh(peer_EthCard);sh(peer_fd);
+					Packet p;
+			        p.setType(REMOVE_IP);
+			        p.setDest(stringToAddr(dest));
+			        p.setData(my_EthernetCard+" "+peer_EthernetCard);
+			        p.send(peer_fd);
+				}
+			}
+		}
+	}
+}
+
 void Router::parse_packet(Packet p, int client_fd)
 {
 	cout<<"I recive packet"<<endl;
@@ -398,6 +447,11 @@ void Router::parse_packet(Packet p, int client_fd)
 		join(p);
 	else if(p.getType()==LEAVE)
 		leave(p);
+	else if(p.getType()==NOETH)
+		remove_connection(p, client_fd);
+	/*else if(p.getType()==REMOVE_IP)
+		remove_ip(p, client_fd);
+	*/
 	else
 	{
 		pass_unicast_data(p);

@@ -36,6 +36,7 @@ public:
 	void connect_client(Packet p, int client_fd);
 	void join(Packet p);
 	void leave(Packet p);
+	void remove_connection(Packet p, int client_fd);
 	void parse_packet(Packet p, int client_fd);
 	
 	void Eth(string ethCardNum);
